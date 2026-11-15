@@ -12,6 +12,7 @@ Climate & Health Economics · Administrative Data · Statistical Modelling · Da
 [![Publication](https://img.shields.io/badge/Research-Publication-3D7998?style=flat-square&logo=googlescholar&logoColor=white)](https://doi.org/10.1007/s10113-026-02667-y)
 [![GitHub](https://img.shields.io/badge/GitHub-Profile-30363D?style=flat-square&logo=github&logoColor=white)](https://github.com/LUCYLU-debug)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/siyi-lu-509970420/)
+[![University Profile](https://img.shields.io/badge/VUW-University_Profile-115740?style=flat-square&logo=academia&logoColor=white)](https://www.wgtn.ac.nz/cedcc/our-people/siyi-lu)
 
 </div>
 
