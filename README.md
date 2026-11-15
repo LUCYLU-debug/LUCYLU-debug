@@ -90,8 +90,7 @@ Current work includes:
 **Victoria University of Wellington**
 
 - PhD research in climate and health economics
-- Quantitative methods tutoring, including tutorial delivery, examination preparation and assessment marking
-- Communicating statistical concepts and research findings to academic and non-technical audiences
+- Mathematics tutoring, including tutorial delivery, exam revision sessions and final examination marking
 
 ---
 
