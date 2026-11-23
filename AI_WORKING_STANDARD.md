@@ -311,35 +311,385 @@ For statistical code, separate:
 2. **model implementation correctness**;
 3. **statistical/design validity**.
 
-A successful model fit only addresses none of these automatically.
+A successful model fit does not establish any of these automatically.
 
 ---
 
-# 7. Statistical and research-method standard
+# 7. Research project standard: from broad idea to defensible design
 
-AI may propose models, estimators or research designs, but an unfamiliar method remains a **candidate**, not an accepted choice.
+AI can help move a project from a broad idea to a concrete research design, but the project must not become a sequence of AI-selected defaults. The researcher should be able to reconstruct the reasoning that connects the question, estimand, design, data and model.
 
-Before a method becomes part of a formal analysis:
+The central rule is:
 
-1. define the estimand;
-2. explain why the data structure can identify or estimate it;
-3. identify the key assumptions;
-4. consult primary methodological literature, authoritative documentation or both;
-5. verify that the implementation matches the intended method;
-6. test the implementation on toy or simulated data where useful;
-7. examine diagnostics and sensitivity to defensible alternatives;
-8. distinguish robustness of implementation from robustness of scientific conclusion.
+> **Question first → estimand second → design third → data feasibility fourth → model fifth → implementation sixth.**
 
-For causal or attribution work, explicitly separate:
+In practice these stages interact and may require iteration, but a convenient model or available dataset should not silently redefine the scientific question.
 
-- observed association;
-- identification assumptions;
-- counterfactual construction;
-- statistical estimation;
-- uncertainty;
-- causal interpretation.
+## 7.1 Start by converting the broad idea into a research target
 
-Do not let AI collapse these into one step.
+A broad idea such as “What is the effect of A on B?” is not yet a research design.
+
+Before selecting data or a model, specify as far as possible:
+
+- **Phenomenon:** what relationship or mechanism is of interest?
+- **Target population:** to whom should the result apply?
+- **Exposure/treatment/predictor:** what exactly is A?
+- **Outcome:** what exactly is B?
+- **Time scale:** immediate, cumulative, annual, lifetime, event-time, etc.?
+- **Geographical scale:** individual, household, neighbourhood, region, country, etc.?
+- **Research purpose:** descriptive, associative, predictive, causal, attributional, forecasting or policy evaluation?
+- **Estimand:** what quantity would answer the question?
+- **Unit of analysis:** what does one analytical observation represent?
+- **Counterfactual, if relevant:** compared with what alternative state?
+- **Decision relevance:** what would be learned if the answer were known?
+
+If several versions are plausible, keep them as alternatives rather than forcing an early choice.
+
+## 7.2 Build a research decision map before committing to one approach
+
+For any consequential research choice, identify the plausible alternatives.
+
+Examples:
+
+- individual-level versus area-level analysis;
+- observational versus quasi-experimental design;
+- station observations versus gridded exposure data;
+- short high-quality period versus long lower-quality period;
+- simple linear specification versus flexible non-linear specification;
+- complete-case analysis versus a method that retains partial information;
+- one outcome definition versus another defensible definition.
+
+The purpose is not to compare every imaginable method. It is to compare the **serious alternatives that could materially change the answer**.
+
+For each alternative, ask:
+
+1. What question does this option actually answer?
+2. What assumptions does it require?
+3. What data does it require?
+4. What major bias or failure mode does it reduce?
+5. What new weakness does it introduce?
+6. What information is lost or gained?
+7. How interpretable is the resulting estimand?
+8. Can the method be implemented and validated with the available resources?
+9. Would a reasonable researcher accept the assumptions even if the result were inconvenient?
+
+AI should help construct this comparison, not simply recommend one option.
+
+## 7.3 Use a research-design trade-off matrix
+
+When the choice is non-trivial, compare candidate approaches across the following dimensions.
+
+| Dimension | Question |
+| --- | --- |
+| Question alignment | Does the design estimate the quantity the research question actually asks for? |
+| Identification strength | What variation identifies the effect, and how credible is it? |
+| Counterfactual quality | Is the comparison group/state meaningful and defensible? |
+| Assumption burden | Which assumptions are required, and which are most fragile? |
+| Confounding/control | Which important sources of confounding are handled, and which remain? |
+| Measurement quality | How accurately are exposure, treatment, outcome and covariates measured? |
+| Population coverage | Who is included or excluded, and does that change the target population? |
+| Time coverage | Is the available period long enough and comparable across time? |
+| Spatial/temporal resolution | Does the data resolution match the mechanism and estimand? |
+| Missingness/selection | Could missing data or linkage/selection processes distort the sample? |
+| Statistical information | Is there enough variation, sample size and effective information for the design? |
+| Model dependence | How much does the answer depend on functional-form or tuning choices? |
+| Interpretability | Can the estimand and model output be explained clearly? |
+| Robustness potential | Can the main threats be tested or bounded empirically? |
+| External validity | To which settings or populations can the result plausibly generalise? |
+| Comparability | Can the result be compared with relevant literature or previous work? |
+| Novelty/value added | Does this option answer something meaningfully new rather than merely more complicated? |
+| Feasibility | Can the data, software, time and governance requirements actually be met? |
+| Reproducibility/auditability | Can the analytical chain be reconstructed and checked? |
+
+Do not reduce this table to a mechanical score unless scoring is genuinely useful. Some weaknesses are **fatal**, while others are acceptable trade-offs.
+
+A design with slightly less statistical efficiency may be preferable if it has substantially stronger identification. A larger dataset may be inferior if the key variable is badly measured. A more sophisticated model may be inferior if the estimand becomes opaque and the added flexibility does not address an identified threat.
+
+## 7.4 Data choice: more data is not automatically better data
+
+When choosing between datasets or exposure sources, assess at least:
+
+- target-population coverage;
+- inclusion/exclusion rules;
+- linkage quality;
+- missingness;
+- measurement error;
+- coding changes over time;
+- temporal completeness;
+- spatial completeness;
+- temporal and spatial alignment with the outcome;
+- granularity;
+- consistency across years;
+- availability of important confounders or stratifiers;
+- confidentiality/governance constraints;
+- computational feasibility;
+- whether the data-generating process changes during the study period.
+
+Important trade-offs should be explicit.
+
+Examples of legitimate trade-offs include:
+
+- **longer time coverage vs more consistent measurement**;
+- **greater spatial resolution vs noisier measurement**;
+- **individual-level detail vs incomplete linkage**;
+- **direct observation vs modelled/predicted exposure with better coverage**;
+- **larger sample vs a more narrowly defined but cleaner population**.
+
+The decision should follow the research question. Do not prefer a dataset merely because it is larger, newer, more granular or easier to use.
+
+For each key data source, distinguish:
+
+1. **What is directly observed?**
+2. **What is linked or inferred?**
+3. **What is modelled or imputed?**
+4. **What is unavailable?**
+5. **What errors could this introduce into the estimand?**
+
+## 7.5 Research design: choose the source of identification before the regression command
+
+A statistical model does not create identification by itself.
+
+Before choosing the estimator, state:
+
+- what variation identifies the parameter;
+- which observations are being compared with which;
+- what makes those observations comparable;
+- which confounders are controlled by design;
+- which confounders rely on modelling;
+- what temporal ordering is assumed;
+- whether selection into the sample can depend on exposure or outcome;
+- whether interference, spillovers or repeated observations matter;
+- whether standard errors must account for clustering, serial correlation or repeated measures.
+
+Candidate designs should be judged by their **identifying logic**, not by which one is more fashionable or produces a cleaner result.
+
+For causal work, explicitly identify the counterfactual logic. For descriptive or associative work, avoid importing causal language that the design cannot support.
+
+## 7.6 Model choice: the model serves the design, not the reverse
+
+Once the estimand and design are clear, select a model that implements them.
+
+Default principles:
+
+- start with the simplest defensible specification that answers the question;
+- add complexity only when it addresses a substantive feature or identified statistical problem;
+- distinguish necessary flexibility from decorative complexity;
+- prefer specifications whose assumptions can be inspected and explained;
+- do not select the final model because it yields the most significant, novel or convenient result.
+
+When comparing models, examine:
+
+- estimand produced by each model;
+- functional-form assumptions;
+- treatment/exposure-response shape;
+- time trend and seasonality handling;
+- lag structure;
+- interaction structure;
+- fixed/random effects or stratification;
+- weighting;
+- variance estimator;
+- clustering;
+- regularisation or smoothing;
+- extrapolation;
+- effective degrees of freedom;
+- convergence and numerical stability;
+- sensitivity to influential observations;
+- interpretability.
+
+Where appropriate, maintain:
+
+- a **primary model** chosen for substantive reasons;
+- a small set of **alternative defensible specifications** linked to specific threats or uncertainties.
+
+The alternatives should not become an unlimited specification search.
+
+## 7.7 Separate four questions that are often incorrectly collapsed
+
+For every major model, separately ask:
+
+### A. Is the scientific question coherent?
+This is about the concept and estimand.
+
+### B. Can the available data answer it?
+This is about measurement, coverage, timing and selection.
+
+### C. Does the research design identify or estimate the target quantity?
+This is about assumptions and counterfactual logic.
+
+### D. Does the code correctly implement the chosen design/model?
+This is about computation.
+
+A correct answer to D cannot rescue a failure in A–C.
+
+## 7.8 Use a layered validity framework
+
+A research result should be examined through distinct layers:
+
+1. **Conceptual validity** — does the estimand represent the scientific idea?
+2. **Measurement validity** — do the observed variables adequately represent the intended concepts?
+3. **Design/identification validity** — does the comparison recover the intended association/effect under defensible assumptions?
+4. **Data-construction correctness** — were cohorts, exposures, outcomes, dates and covariates constructed as intended?
+5. **Implementation correctness** — does the code implement the algorithm/model correctly?
+6. **Statistical adequacy** — are model assumptions, uncertainty estimates and diagnostics acceptable?
+7. **Robustness** — do conclusions survive defensible alternatives targeted at real threats?
+8. **Substantive plausibility** — are results coherent with the data-generating context and relevant evidence?
+9. **Reporting validity** — does the manuscript claim no more than the analysis establishes?
+
+Each layer requires different evidence. No single p-value, robustness check, simulation or code review can validate all nine.
+
+## 7.9 Before seeing the main result, state expectations and failure signals
+
+Where practical, document what would be expected if the implementation is correct.
+
+This is not a requirement to predict the scientific answer. It is a requirement to distinguish **pre-result reasoning** from **post-result rationalisation**.
+
+Examples:
+
+- expected row-count changes;
+- known relationships in toy data;
+- sign or scale implied by a simulated data-generating process;
+- values that must be impossible;
+- coefficients that should be close to zero in a placebo case;
+- known benchmark totals;
+- qualitative patterns expected from the design rather than from the hypothesis.
+
+For exploratory research, hypotheses may remain open. Label exploration as exploration rather than inventing a prior prediction afterwards.
+
+## 7.10 Robustness should target threats, not generate a wall of regressions
+
+Every important robustness or sensitivity analysis should answer:
+
+> **Which possible failure of the main analysis does this test address?**
+
+Use a threat-based table:
+
+| Threat | Why it matters | Diagnostic / alternative | What result would reduce concern? | What result would change interpretation? |
+| --- | --- | --- | --- | --- |
+| Exposure misclassification | estimated effect may be attenuated or spatially distorted | alternative exposure source / restriction | similar substantive pattern | large change tied to exposure definition |
+| Temporal specification | residual time structure may confound estimates | alternative trend/seasonality control | stable main inference | materially different effect |
+| Lag choice | cumulative effect depends on temporal window | alternative defensible lag windows | stable shape/summary | reversal or strong instability |
+| Sample definition | result may depend on selected population | alternative eligibility rule | similar inference | subgroup/sample-driven result |
+| Variance estimation | inference may be overstated | alternative valid SE/cluster method | similar uncertainty conclusion | significance/inference changes materially |
+
+Robustness does not mean “the coefficient stays identical”. The question is whether the substantive conclusion remains defensible and, if it changes, whether the reason is understood.
+
+## 7.11 When two defensible options disagree, investigate rather than average them away
+
+If two credible designs, data sources or models produce different answers:
+
+1. confirm that both implementations are correct;
+2. identify which observations or assumptions differ;
+3. determine whether the estimands are actually the same;
+4. locate the source of disagreement;
+5. assess which assumptions are more credible for the stated question;
+6. report consequential sensitivity rather than hiding it.
+
+Disagreement is information. It may reveal measurement problems, effect heterogeneity, model dependence or a poorly defined estimand.
+
+## 7.12 Rules for AI-proposed methods
+
+When AI suggests an unfamiliar design, estimator, package or interpretation, treat it as a research lead.
+
+Before adoption:
+
+1. ask AI for at least one serious alternative;
+2. ask what assumptions distinguish the options;
+3. identify failure modes and data requirements;
+4. verify the method in original methodological literature and/or authoritative documentation;
+5. confirm that the method has actually been used for comparable data structures where relevant;
+6. reproduce a simple example or simulation;
+7. explain the method in plain language;
+8. decide whether the added complexity solves a real research problem.
+
+A method is not preferable merely because it is newer, more technical or more publishable-sounding.
+
+## 7.13 Research stage gates
+
+A paper can move through the following gates. Returning to an earlier gate is normal when new information appears.
+
+### Gate 1 — Question and estimand
+Before heavy data work:
+- research question is explicit;
+- target population/outcome/exposure are defined;
+- research purpose is classified;
+- estimand or target quantity is stated.
+
+### Gate 2 — Data feasibility
+Before committing to the design:
+- required variables exist;
+- study period and coverage are known;
+- missingness/linkage/measurement issues are mapped;
+- major data limitations are identified;
+- confidentiality/governance constraints are feasible.
+
+### Gate 3 — Design choice
+Before large-scale modelling:
+- identifying comparison is explicit;
+- serious alternatives have been considered;
+- main assumptions are documented;
+- reasons for the chosen design are stronger than convenience alone.
+
+### Gate 4 — Analytical construction
+Before interpreting results:
+- critical transformations have validation contracts;
+- toy/known cases pass;
+- real-data diagnostics pass;
+- model implementation has been checked.
+
+### Gate 5 — Scientific challenge
+Before treating the main result as stable:
+- key threats have targeted sensitivity analyses;
+- surprising results have been traced through the pipeline;
+- disagreement across defensible specifications is understood.
+
+### Gate 6 — Manuscript claim
+Before submission:
+- every important number traces to final output;
+- causal/associational language matches the design;
+- literature claims trace to verified sources;
+- limitations correspond to real unresolved threats;
+- the researcher can explain why the selected design/data/model were chosen over the main alternatives.
+
+## 7.14 General research choice template
+
+For a consequential decision, use a table like this:
+
+| Decision | Option | What it answers | Main assumptions | Data requirements | Main advantage | Main weakness | Validation needed | Reason to choose/reject |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Design | A | ... | ... | ... | ... | ... | ... | ... |
+| Design | B | ... | ... | ... | ... | ... | ... | ... |
+| Data source | A | ... | ... | ... | ... | ... | ... | ... |
+| Data source | B | ... | ... | ... | ... | ... | ... | ... |
+| Model | A | ... | ... | ... | ... | ... | ... | ... |
+| Model | B | ... | ... | ... | ... | ... | ... | ... |
+
+The table exists to expose reasoning, not to create paperwork. Use it when the choice could materially change the scientific conclusion.
+
+## 7.15 Practical trade-off rules
+
+When choices remain difficult, use the following priorities:
+
+- **For causal questions, identification usually outranks sample size.**
+- **For measurement-sensitive questions, data quality can outrank granularity.**
+- **For long-period studies, comparability over time can outrank nominal coverage length.**
+- **For complex models, additional flexibility must justify its assumptions and loss of interpretability.**
+- **For competing datasets, the source that better measures the target construct may be preferable even if it is less convenient.**
+- **For competing models with similar validity, prefer the more transparent and auditable one.**
+- **If a weakness could reverse the conclusion, treat it as a design issue, not a footnote.**
+- **If two options estimate different quantities, do not compare them as though they were competing estimates of the same estimand.**
+- **Do not optimise simultaneously for significance, novelty and simplicity. Optimise for a defensible answer to the stated question.**
+
+## 7.16 Research decision standard
+
+The final question is not:
+
+> “Is this the best possible design in the abstract?”
+
+It is:
+
+> **“Given the scientific question, available data, feasible alternatives and known assumptions, is this a defensible design, and can I explain why its trade-offs are preferable to the main alternatives?”**
+
+That is the level of reasoning required before AI-assisted research becomes researcher-owned research.
 
 ---
 
@@ -496,17 +846,30 @@ For each critical step, AI should provide or help construct:
 
 # 16. New-project protocol
 
-At the beginning of every substantive new project:
+At the beginning of every substantive new project, use this standard as the default operating framework rather than creating a separate AI rulebook for each project.
 
-1. state the project question and intended deliverable;
-2. identify high-risk decisions;
-3. create a validation plan for critical data/method steps;
-4. decide which claims require external authoritative sources;
-5. define what AI may assist with;
-6. identify what must remain a human sign-off decision;
-7. record important methodological decisions and why they were made.
+## 16.1 For a research paper
 
-For data projects, begin a validation table such as:
+Before heavy implementation, create a compact project map covering:
+
+1. **Broad idea** — what phenomenon is being investigated?
+2. **Research question** — what exact question could become the paper's central question?
+3. **Target estimand** — what quantity would answer it?
+4. **Candidate designs** — what are the main serious alternatives?
+5. **Data map** — which sources are required, what do they measure, and where are the gaps?
+6. **Trade-offs** — what is gained and lost under each plausible design/data choice?
+7. **Identification assumptions** — what must be true for the preferred interpretation?
+8. **Model strategy** — what is the simplest defensible primary model, and which alternatives correspond to real threats?
+9. **Validation plan** — which transformations require toy/known-case tests, diagnostics or simulation?
+10. **Evidence plan** — which methodological or factual claims require primary literature or official documentation?
+11. **Decision points** — which choices require explicit researcher sign-off?
+12. **Stopping rule** — what evidence would make the current approach unsuitable and force redesign?
+
+The project map can live in the paper's normal research notes or README. A separate AI-validation document is not required unless there is a specific reason to create one.
+
+## 16.2 For data/analysis projects
+
+For each critical node, maintain a validation table such as:
 
 | Step | Prediction | Toy/known-case test | Real-data check | Pass condition |
 | --- | --- | --- | --- | --- |
@@ -514,7 +877,19 @@ For data projects, begin a validation table such as:
 | Example: construct lag 1 | exposure shifts exactly one day | 5-day sequence | inspect boundary dates | hand result matches |
 | Example: aggregate person-days | totals preserved within group | 2-person toy dataset | reconcile counts | group sums equal source totals |
 
-The table should evolve with the project.
+## 16.3 For writing, job applications and workplace deliverables
+
+Define:
+
+- intended audience;
+- intended claim/action;
+- source material;
+- factual constraints;
+- what AI may draft or transform;
+- what requires human verification;
+- final acceptance criteria.
+
+The level of documentation should be proportional to risk. The purpose is to preserve reasoning and verification, not to create unnecessary process.
 
 ---
 
@@ -532,6 +907,7 @@ Before treating an important output as finished:
 - [ ] Reported numbers match final outputs.
 - [ ] Interpretation does not exceed the evidence.
 - [ ] I can explain the main logic, assumptions and limitations.
+- [ ] For consequential research choices, I can explain why the selected design, data source and model are preferable to the main alternatives.
 - [ ] I am willing to take responsibility for the final deliverable.
 
 ---
